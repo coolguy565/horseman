@@ -1,0 +1,8 @@
+bin/
+obj/
+.vs/
+*.exe
+*.pdb
+*.dll
+*.cache
+*.nupkg

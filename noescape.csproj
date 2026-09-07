@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PublishAot>true</PublishAot>
+    <IlcOptimizationPreference>Speed</IlcOptimizationPreference>
+    <RootNamespace>noescape</RootNamespace>
+    <AssemblyName>horseman</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <StripSymbols>true</StripSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\creepy_wallpaper.bmp" LogicalName="horseman.Resources.creepy_wallpaper.bmp" />
+    <EmbeddedResource Include="Resources\thingy.exe" LogicalName="horseman.Resources.thingy.exe" />
+    <EmbeddedResource Include="Resources\guest.bmp" LogicalName="noescape.Resources.guest.bmp" />
+    <EmbeddedResource Include="Resources\guest.png" LogicalName="noescape.Resources.guest.png" />
+    <EmbeddedResource Include="Resources\user.bmp" LogicalName="noescape.Resources.user.bmp" />
+    <EmbeddedResource Include="Resources\user.png" LogicalName="noescape.Resources.user.png" />
+    <EmbeddedResource Include="Resources\user-32.png" LogicalName="noescape.Resources.user-32.png" />
+    <EmbeddedResource Include="Resources\user-40.png" LogicalName="noescape.Resources.user-40.png" />
+    <EmbeddedResource Include="Resources\user-48.png" LogicalName="noescape.Resources.user-48.png" />
+    <EmbeddedResource Include="Resources\user-192.png" LogicalName="noescape.Resources.user-192.png" />
+  </ItemGroup>
+</Project>
