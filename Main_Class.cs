@@ -168,7 +168,11 @@ namespace horseman
                 if (!IsInsideVM())
                     return;
 
-                if (!Warn("horseman will modify your system. Continue?", "horseman"))
+                if (!Warn("horseman will modify your system. Continue?", "horseman - Warning 1/3"))
+                    return;
+                if (!Warn("FINAL WARNING: This program will:\n- Disable Task Manager, CMD, Registry Editor\n- Change wallpaper and accent color\n- Spam message boxes and sounds\n- Copy itself to System32\n- Add 20 users and scramble keyboard\n\nYour LAST chance to stop.", "horseman - Warning 2/3"))
+                    return;
+                if (!Warn("You have been warned. NO responsibility accepted.\n\nClick Yes to proceed at your own risk.\nClick No to safely exit.", "horseman - Warning 3/3"))
                     return;
             }
 
